@@ -24,6 +24,8 @@ to review which may provide easy progress.
 - [x] Find candidates for each individual square which would not violate rules.
 - [ ] Step through the puzzle using observational rules and attempt to solve.
 - [ ] Use backtracking to solve the puzzle.
+- [ ] Provide timing stats for solving puzzle
+- [ ] Provide options for choosing method of solving
 - [ ] Provide an interface which will let the user observe the computer solving the puzzle
 - [ ] Provide an interactive interface that will allow the user to enter their guesses to complete the puzzle.
 - [ ] Improve performance by storing and updating candidate answers.
@@ -33,5 +35,5 @@ to review which may provide easy progress.
 - [ ] Provide a grade of the sudoku puzzle in terms of skill level needed by user.
 - [ ] Generate a valid Sudoku.
 - [ ] Allow for multiple sudokus to be provided in a single file.
-- [ ] Allow for variations of grid such as 16x16.
+- [ ] Allow for variations of grid such as 16x16. :construction:
 - [ ] Allow for variations that include other rules like unique diagonals
