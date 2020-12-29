@@ -25,9 +25,9 @@ to review which may provide easy progress.
 - [x] Determine whether the sudoku is complete (no blanks).
 - [x] Determine whether the sudoku is valid (no rule violation).
 - [x] Find candidates for each individual square which would not violate rules.
-- [ ] Step through the puzzle using observational rules and attempt to solve.
+- [x] Step through the puzzle using observational rules and attempt to solve.
 - [ ] Use backtracking to solve the puzzle.
-- [ ] Provide timing stats for solving puzzle
+- [x] Provide timing stats for solving puzzle
 - [ ] Use logger for capturing debug and error information
 - [ ] Provide options for choosing method of solving
 - [ ] Provide an interface which will let the user observe the computer solving the puzzle
@@ -36,7 +36,7 @@ to review which may provide easy progress.
 - [ ] Package project using setuptools or equivalent
 
 ### Other features to be considered:
-- [ ] UI using Tkinter.
+- [ ] UI using Tkinter or Pygame.
 - [ ] Produce "heat map" that shows easiest to most difficult squares to solve. 
 - [ ] Provide a grade of the sudoku puzzle in terms of skill level needed by user.
 - [ ] Generate a valid Sudoku.
