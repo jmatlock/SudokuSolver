@@ -21,7 +21,8 @@ puzzle file, indicate whether the puzzle is completed and/or valid
 starting places to solve the puzzle.
 """
 import argparse
-import os
+from Timer import Timer
+import copy
 
 
 def convert_to_dot(val: int):
@@ -33,12 +34,17 @@ def convert_to_dot(val: int):
 
 class Sudoku:
     def __init__(self):
-        self.grid = [0] * 81
+        # By default we assume the classic 9x9 Sudoku.
+        self.rows = 9
+        self.cols = 9
+        self.values = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+        self.grid = [0] * (self.rows * self.cols)
+        self.candidates = [[]] * (self.rows * self.cols)
 
     def __str__(self):
         result = ''
-        for x in range(0, 81, 9):
-            result += ' '.join(map(convert_to_dot, self.grid[x:x + 9])) + '\n'
+        for x in range(0, (self.rows * self.cols), self.rows):
+            result += ' '.join(map(convert_to_dot, self.grid[x:x + self.cols])) + '\n'
         return result
 
     @classmethod
@@ -57,7 +63,9 @@ class Sudoku:
         try:
             with open(filename, 'r') as f:
                 for row in f:
-                    fromfile += list(map(int, row.split(' ')))
+                    # Enable commenting with hashtag in first column
+                    if row[0] != '#':
+                        fromfile += list(map(int, row.split(' ')))
         except Exception as e:
             print("File error:", e)
             exit(1)
@@ -74,7 +82,7 @@ class Sudoku:
         :return: True if following all standard rules
         """
         for idx in range(len(self.grid)):
-            if len(self.candidates(idx)) == 0:
+            if len(self.possibles(idx)) == 0:
                 print(f'Not valid due to position {idx}')
                 return False
         return True
@@ -91,7 +99,7 @@ class Sudoku:
                 return False
         return True
 
-    def candidates(self, loc):
+    def possibles(self, loc):
         """
         Returns a list of all possible valid values for a grid
         location based on uniqueness across row, column, and
@@ -106,23 +114,26 @@ class Sudoku:
         val = self.grid[loc]
         if val != 0:
             # print(f'Location value: {val}')
+            self.candidates[loc] = [val]
             return [val]
 
-        results = {1, 2, 3, 4, 5, 6, 7, 8, 9}
-        row = loc // 9
-        row_set = set(self.grid[row * 9:(row + 1) * 9])
+        results = self.values
+        row = loc // self.cols
+        row_set = set(self.grid[row * self.cols:(row + 1) * self.cols])
         # print(f'row set = {row_set}')
-        col = loc % 9
-        col_set = {self.grid[x * 9 + col] for x in range(9)}
+        col = loc % self.cols
+        col_set = {self.grid[x * self.rows + col] for x in range(self.rows)}
         # print(f'col set = {col_set}')
         # for local set, calculate location of upper left square
+        # TODO: Parameterize the hardcoded values for local set determination
         upper_left_local = (row // 3 * 27) + (col // 3 * 3)
-        local_set = set(self.grid[upper_left_local:upper_left_local+3] +
-                        self.grid[upper_left_local+9:upper_left_local+12] +
-                        self.grid[upper_left_local+18:upper_left_local+21])
+        local_set = set(self.grid[upper_left_local:upper_left_local + 3] +
+                        self.grid[upper_left_local + 9:upper_left_local + 12] +
+                        self.grid[upper_left_local + 18:upper_left_local + 21])
         # print(f'local set = {local_set}')
         results = results - (row_set | col_set | local_set)
         # print(f'results = {results}')
+        self.candidates[loc] = list(results)
         return list(results)
 
 
@@ -144,17 +155,31 @@ def sudoku_solve():
     # print(f'Input file = {args.infile}')
     # print(f'Interactive = {args.interactive}')
     s = Sudoku.sudoku_from_file(args.infile)
+    print(f'Puzzle from {args.infile}\n')
     print(s)
     print(f'Complete = {s.is_complete()}')
     print(f'Valid = {s.is_valid()}')
-    if s.is_valid():
-        for idx in range(len(s.grid)):
-            if s.grid[idx] == 0:
-                possibles = s.candidates(idx)
-                if len(possibles) == 1:
-                    print(f'Single candidate at row {idx // 9}, col {idx % 9}')
-                elif len(possibles) == 2:
-                    print(f'Two candidates at row {idx // 9}, col {idx % 9}')
+    s_answer = copy.deepcopy(s)
+    one_to_solve = True
+    iterations = 0
+    with Timer("Solving naked single", text="Solving time (naked single): {:0.4f} seconds"):
+        while one_to_solve:
+            one_to_solve = False
+            if s_answer.is_valid() and not s_answer.is_complete():
+                iterations += 1
+                for idx in range(len(s_answer.grid)):
+                    if s_answer.grid[idx] == 0:
+                        possibles = s_answer.candidates[idx]
+                        if len(possibles) == 1:
+                            s_answer.grid[idx] = possibles[0]
+                            one_to_solve = True
+    print(f'Answer via naked singles method:\n{s_answer}')
+    if s_answer.is_complete():
+        print(f'Sudoku solved in {iterations} iterations')
+    else:
+        unsolved = [x for x in s_answer.candidates if len(x) > 0]
+        print(f'Sudoku not solved in {iterations} iterations. {len(unsolved)} remaining')
+
 
 
 if __name__ == '__main__':
