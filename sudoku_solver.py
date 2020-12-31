@@ -146,7 +146,7 @@ def display_interactive(infile, s):
     playfield = tk.Frame(master=display,
                          relief=tk.SUNKEN,
                          borderwidth=1)
-    playfield.pack()
+    playfield.grid(row=0, column=0)
 
     for row in range(s.rows):
         playfield.columnconfigure(row, weight=1, minsize=40)
@@ -155,7 +155,7 @@ def display_interactive(infile, s):
             frame = tk.Frame(master=playfield,
                              relief=tk.RAISED,
                              borderwidth=1)
-            frame.grid(row=row, column=col)
+            frame.grid(row=row, column=col, sticky='nsew')
             val = str(s.grid[row*s.cols + col])
             if val == "0":
                 val = "."
@@ -163,7 +163,7 @@ def display_interactive(infile, s):
             label.pack(padx=5, pady=5)
 
     buttonfield = tk.Frame(master=display, pady=10)
-    buttonfield.pack()
+    buttonfield.grid(row=1, column=0)
     button1 = tk.Button(master=buttonfield,
                         pady=10,
                         text="Check Answer")
