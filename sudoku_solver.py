@@ -23,6 +23,7 @@ starting places to solve the puzzle.
 import argparse
 from Timer import Timer
 import copy
+import tkinter as tk
 
 
 def convert_to_dot(val: int):
@@ -137,6 +138,39 @@ class Sudoku:
         return list(results)
 
 
+def display_interactive(infile, s):
+    display = tk.Tk()
+    display.title(infile)
+    display.columnconfigure(0, weight=1, minsize=40)
+    display.rowconfigure(0, weight=1, minsize=40)
+    playfield = tk.Frame(master=display,
+                         relief=tk.SUNKEN,
+                         borderwidth=1)
+    playfield.pack()
+
+    for row in range(s.rows):
+        playfield.columnconfigure(row, weight=1, minsize=40)
+        playfield.rowconfigure(row, weight=1, minsize=40)
+        for col in range(s.cols):
+            frame = tk.Frame(master=playfield,
+                             relief=tk.RAISED,
+                             borderwidth=1)
+            frame.grid(row=row, column=col)
+            val = str(s.grid[row*s.cols + col])
+            if val == "0":
+                val = "."
+            label = tk.Label(master=frame, text=f"{val}")
+            label.pack(padx=5, pady=5)
+
+    buttonfield = tk.Frame(master=display, pady=10)
+    buttonfield.pack()
+    button1 = tk.Button(master=buttonfield,
+                        pady=10,
+                        text="Check Answer")
+    button1.pack()
+    display.mainloop()
+
+
 def sudoku_solve():
     """
     In non-interactive mode, prints the solution to the given
@@ -155,14 +189,17 @@ def sudoku_solve():
     # print(f'Input file = {args.infile}')
     # print(f'Interactive = {args.interactive}')
     s = Sudoku.sudoku_from_file(args.infile)
-    print(f'Puzzle from {args.infile}\n')
-    print(s)
+    if not(args.interactive):
+        print(f'Puzzle from {args.infile}\n')
+        print(s)
+    else:
+        display_interactive(args.infile, s)
     print(f'Complete = {s.is_complete()}')
     print(f'Valid = {s.is_valid()}')
     s_answer = copy.deepcopy(s)
     one_to_solve = True
     iterations = 0
-    with Timer("Solving naked single", text="Solving time (naked single): {:0.4f} seconds"):
+    with Timer("Solving naked single only", text="Solving time (naked single only): {:0.4f} seconds"):
         while one_to_solve:
             one_to_solve = False
             if s_answer.is_valid() and not s_answer.is_complete():
@@ -178,7 +215,7 @@ def sudoku_solve():
         print(f'Sudoku solved in {iterations} iterations')
     else:
         unsolved = [x for x in s_answer.candidates if len(x) > 0]
-        print(f'Sudoku not solved in {iterations} iterations. {len(unsolved)} remaining')
+        print(f'Sudoku not solved in {iterations} iterations. {len(unsolved)} remaining squares.')
 
 
 

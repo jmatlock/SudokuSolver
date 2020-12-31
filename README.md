@@ -31,8 +31,8 @@ to review which may provide easy progress.
 - [ ] Use logger for capturing debug and error information
 - [ ] Provide options for choosing method of solving
 - [ ] Provide an interface which will let the user observe the computer solving the puzzle
-- [ ] Provide an interactive interface that will allow the user to enter their guesses to complete the puzzle.
-- [ ] Improve performance by storing and updating candidate answers.
+- [ ] Provide an interactive interface that will allow the user to enter their guesses to complete the puzzle. :construction:
+- [ ] Improve performance by storing and updating candidate answers. :construction:
 - [ ] Package project using setuptools or equivalent
 
 ### Other features to be considered:

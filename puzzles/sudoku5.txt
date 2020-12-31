@@ -1,4 +1,4 @@
-# This expert sudoku does not contain any hidden singles.
+# This expert sudoku does not contain any naked singles.
 0 0 0 0 0 0 0 0 0
 0 3 0 0 0 9 0 5 0
 0 0 9 8 2 0 0 1 3
