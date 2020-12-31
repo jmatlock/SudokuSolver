@@ -30,13 +30,16 @@ to review which may provide easy progress.
 - [x] Provide timing stats for solving puzzle
 - [ ] Use logger for capturing debug and error information
 - [ ] Provide options for choosing method of solving
-- [ ] Provide an interface which will let the user observe the computer solving the puzzle
+- [ ] Provide an interface which will let the user observe the computer solving the puzzle:
+    - [x] For naked singles
+    - [ ] For other rules
+    - [ ] For backtracking
 - [ ] Provide an interactive interface that will allow the user to enter their guesses to complete the puzzle. :construction:
 - [ ] Improve performance by storing and updating candidate answers. :construction:
 - [ ] Package project using setuptools or equivalent
 
 ### Other features to be considered:
-- [ ] UI using Tkinter or Pygame.
+- [ ] UI using Tkinter or Pygame. :construction:
 - [ ] Produce "heat map" that shows easiest to most difficult squares to solve. 
 - [ ] Provide a grade of the sudoku puzzle in terms of skill level needed by user.
 - [ ] Generate a valid Sudoku.

@@ -24,6 +24,64 @@ import argparse
 from Timer import Timer
 import copy
 import tkinter as tk
+import time
+
+
+class Display:
+    def __init__(self):
+        self.answer_cells = []
+        self.display = None
+        self.button = None
+        self.sudoku = None
+
+    def setup_display(self, infile: str, s):
+        self.sudoku = s
+        self.display = tk.Tk()
+        self.display.title(infile)
+        self.display.columnconfigure(0, weight=1, minsize=40)
+        self.display.rowconfigure(0, weight=1, minsize=40)
+        playfield = tk.Frame(master=self.display,
+                             relief=tk.SUNKEN,
+                             borderwidth=1)
+        playfield.grid(row=0, column=0)
+
+        for row in range(s.rows):
+            playfield.columnconfigure(row, weight=1, minsize=40)
+            playfield.rowconfigure(row, weight=1, minsize=40)
+            for col in range(s.cols):
+                frame = tk.Frame(master=playfield,
+                                 relief=tk.RAISED,
+                                 borderwidth=1)
+                frame.grid(row=row, column=col, sticky='nsew')
+                val = str(s.grid[row * s.cols + col])
+                if val == "0":
+                    val = "."
+                label = tk.Label(master=frame, text=f"{val}")
+                self.answer_cells.append(label)
+                label.pack(padx=5, pady=5)
+
+        buttonfield = tk.Frame(master=self.display, pady=10)
+        buttonfield.grid(row=1, column=0)
+        button1 = tk.Button(master=buttonfield,
+                            pady=10,
+                            text="Solve it",
+                            command=self.animate_solution)
+        self.button = button1
+        button1.pack()
+
+    def event_loop(self):
+        self.display.mainloop()
+
+    def animate_solution(self):
+        updated_cell = self.sudoku.solve_naked_single_one_step()
+        while updated_cell is not None:
+            self.answer_cells[updated_cell]["text"] = f"{self.sudoku.grid[updated_cell]}"
+            self.answer_cells[updated_cell].update()
+            # print(f'Cell {updated_cell} updated with value {self.sudoku.grid[updated_cell]}')
+            time.sleep(0.25)
+            updated_cell = self.sudoku.solve_naked_single_one_step()
+        self.button["text"] = "Operation Complete"
+        self.button["command"] = self.display.quit
 
 
 def convert_to_dot(val: int):
@@ -137,38 +195,37 @@ class Sudoku:
         self.candidates[loc] = list(results)
         return list(results)
 
+    def solve_naked_singles(self):
+        s_answer = copy.deepcopy(self)
+        one_to_solve = True
+        iterations = 0
+        while one_to_solve:
+            one_to_solve = False
+            if s_answer.is_valid() and not s_answer.is_complete():
+                iterations += 1
+                for idx in range(len(s_answer.grid)):
+                    if s_answer.grid[idx] == 0:
+                        possibles = s_answer.candidates[idx]
+                        if len(possibles) == 1:
+                            s_answer.grid[idx] = possibles[0]
+                            one_to_solve = True
+        return s_answer, iterations
 
-def display_interactive(infile, s):
-    display = tk.Tk()
-    display.title(infile)
-    display.columnconfigure(0, weight=1, minsize=40)
-    display.rowconfigure(0, weight=1, minsize=40)
-    playfield = tk.Frame(master=display,
-                         relief=tk.SUNKEN,
-                         borderwidth=1)
-    playfield.grid(row=0, column=0)
+    def solve_naked_single_one_step(self):
+        """
+        Solves one square in Sudoku using naked single rule.
 
-    for row in range(s.rows):
-        playfield.columnconfigure(row, weight=1, minsize=40)
-        playfield.rowconfigure(row, weight=1, minsize=40)
-        for col in range(s.cols):
-            frame = tk.Frame(master=playfield,
-                             relief=tk.RAISED,
-                             borderwidth=1)
-            frame.grid(row=row, column=col, sticky='nsew')
-            val = str(s.grid[row*s.cols + col])
-            if val == "0":
-                val = "."
-            label = tk.Label(master=frame, text=f"{val}")
-            label.pack(padx=5, pady=5)
-
-    buttonfield = tk.Frame(master=display, pady=10)
-    buttonfield.grid(row=1, column=0)
-    button1 = tk.Button(master=buttonfield,
-                        pady=10,
-                        text="Check Answer")
-    button1.pack()
-    display.mainloop()
+        :return: Index of updated square or None if invalid or complete
+        """
+        if self.is_valid() and not self.is_complete():
+            for idx in range(len(self.grid)):
+                if self.grid[idx] == 0:
+                    possibles = self.candidates[idx]
+                    if len(possibles) == 1:
+                        self.grid[idx] = possibles[0]
+                        return idx
+        else:
+            return None
 
 
 def sudoku_solve():
@@ -189,27 +246,19 @@ def sudoku_solve():
     # print(f'Input file = {args.infile}')
     # print(f'Interactive = {args.interactive}')
     s = Sudoku.sudoku_from_file(args.infile)
-    if not(args.interactive):
+    if not args.interactive:
         print(f'Puzzle from {args.infile}\n')
         print(s)
     else:
-        display_interactive(args.infile, s)
+        d = Display()
+        s_prime = copy.deepcopy(s)
+        d.setup_display(args.infile, s_prime)
+        d.event_loop()
     print(f'Complete = {s.is_complete()}')
     print(f'Valid = {s.is_valid()}')
-    s_answer = copy.deepcopy(s)
-    one_to_solve = True
-    iterations = 0
+
     with Timer("Solving naked single only", text="Solving time (naked single only): {:0.4f} seconds"):
-        while one_to_solve:
-            one_to_solve = False
-            if s_answer.is_valid() and not s_answer.is_complete():
-                iterations += 1
-                for idx in range(len(s_answer.grid)):
-                    if s_answer.grid[idx] == 0:
-                        possibles = s_answer.candidates[idx]
-                        if len(possibles) == 1:
-                            s_answer.grid[idx] = possibles[0]
-                            one_to_solve = True
+        s_answer, iterations = s.solve_naked_singles()
     print(f'Answer via naked singles method:\n{s_answer}')
     if s_answer.is_complete():
         print(f'Sudoku solved in {iterations} iterations')
