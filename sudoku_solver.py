@@ -142,7 +142,7 @@ class Sudoku:
         """
         for idx in range(len(self.grid)):
             if len(self.possibles(idx)) == 0:
-                print(f'Not valid due to position {idx}')
+                # print(f'Not valid due to position {idx}')
                 return False
         return True
 
@@ -227,6 +227,33 @@ class Sudoku:
         else:
             return None
 
+    def solve_backtracking_not_optimized(self):
+        print('Starting backtrack: ')
+        solution = copy.deepcopy(self)
+
+        def extend_solution(position):
+            # print(f'{position} ', end='')
+            if position >= len(solution.grid):
+                print()
+                return solution
+            if solution.grid[position] != 0:
+                return extend_solution(position+1)
+            else:
+                for possible in solution.possibles(position):
+                    # print(f'trying {possible} in position {position}')
+                    solution.grid[position] = possible
+                    if not solution.is_valid():
+                        # print(f'{solution}')
+                        solution.grid[position] = 0
+                        continue
+                    elif extend_solution(position+1) is not None:
+                        # print()
+                        return solution
+            solution.grid[position] = 0
+            # print('Backtrack')
+            return None
+
+        return extend_solution(0)
 
 def sudoku_solve():
     """
@@ -241,6 +268,7 @@ def sudoku_solve():
     parser = argparse.ArgumentParser(description='Solve sudoku puzzles')
     parser.add_argument('infile', metavar='str', help='file containing sudoku')
     parser.add_argument('-i', '--interactive', action='store_true', help='interactive mode indicator')
+    parser.add_argument('-b', '--backtrack', action='store_true', help='solve via backtracking')
     args = parser.parse_args()
 
     # print(f'Input file = {args.infile}')
@@ -254,6 +282,15 @@ def sudoku_solve():
         s_prime = copy.deepcopy(s)
         d.setup_display(args.infile, s_prime)
         d.event_loop()
+
+    if args.backtrack:
+        with Timer("Backtracking Not Optimized", text="Backtrack: {:0.4f} seconds"):
+            solution = s.solve_backtracking_not_optimized()
+        if solution is not None:
+            print(f'Solution via backtracking\n{solution}')
+        else:
+            print('Solution not found via backtracking')
+
     print(f'Complete = {s.is_complete()}')
     print(f'Valid = {s.is_valid()}')
 
