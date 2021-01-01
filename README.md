@@ -29,11 +29,11 @@ to review which may provide easy progress.
 - [ ] Use backtracking to solve the puzzle.
 - [x] Provide timing stats for solving puzzle
 - [ ] Use logger for capturing debug and error information
-- [ ] Provide options for choosing method of solving
+- [ ] Provide options for choosing method of solving :construction:
 - [ ] Provide an interface which will let the user observe the computer solving the puzzle:
     - [x] For naked singles
     - [ ] For other rules
-    - [ ] For backtracking
+    - [x] For backtracking (not optimized or animated yet)
 - [ ] Provide an interactive interface that will allow the user to enter their guesses to complete the puzzle. :construction:
 - [ ] Improve performance by storing and updating candidate answers. :construction:
 - [ ] Package project using setuptools or equivalent
