@@ -29,13 +29,17 @@ import time
 
 class Display:
     def __init__(self):
+        self.solve_method = None
         self.answer_cells = []
         self.display = None
         self.button = None
         self.sudoku = None
+        self.delay = 0
 
-    def setup_display(self, infile: str, s):
+    def setup_display(self, infile: str, s, delay: int):
         self.sudoku = s
+        self.solve_method = self.sudoku.solve_naked_singles
+        self.delay = delay
         self.display = tk.Tk()
         self.display.title(infile)
         self.display.columnconfigure(0, weight=1, minsize=40)
@@ -54,9 +58,11 @@ class Display:
                                  borderwidth=1)
                 frame.grid(row=row, column=col, sticky='nsew')
                 val = str(s.grid[row * s.cols + col])
+                color = 'black'
                 if val == "0":
                     val = "."
-                label = tk.Label(master=frame, text=f"{val}")
+                    color = 'red'
+                label = tk.Label(master=frame, text=f"{val}", fg=color)
                 self.answer_cells.append(label)
                 label.pack(padx=5, pady=5)
 
@@ -72,16 +78,23 @@ class Display:
     def event_loop(self):
         self.display.mainloop()
 
+    def update_grid(self, loc, val):
+        if val != 0:
+            self.answer_cells[loc]["text"] = f"{val}"
+        else:
+            self.answer_cells[loc]["text"] = "."
+        self.answer_cells[loc].update()
+        if self.delay != 0:
+            time.sleep(self.delay/1000)
+
     def animate_solution(self):
-        updated_cell = self.sudoku.solve_naked_single_one_step()
-        while updated_cell is not None:
-            self.answer_cells[updated_cell]["text"] = f"{self.sudoku.grid[updated_cell]}"
-            self.answer_cells[updated_cell].update()
-            # print(f'Cell {updated_cell} updated with value {self.sudoku.grid[updated_cell]}')
-            time.sleep(0.25)
-            updated_cell = self.sudoku.solve_naked_single_one_step()
+        self.solve_method(self.update_grid)
         self.button["text"] = "Operation Complete"
         self.button["command"] = self.display.quit
+
+    def solve_by_method(self, backtrack):
+        if (backtrack):
+            self.solve_method = self.sudoku.solve_backtracking_not_optimized
 
 
 def convert_to_dot(val: int):
@@ -195,7 +208,7 @@ class Sudoku:
         self.candidates[loc] = list(results)
         return list(results)
 
-    def solve_naked_singles(self):
+    def solve_naked_singles(self, update_grid):
         s_answer = copy.deepcopy(self)
         one_to_solve = True
         iterations = 0
@@ -208,26 +221,12 @@ class Sudoku:
                         possibles = s_answer.candidates[idx]
                         if len(possibles) == 1:
                             s_answer.grid[idx] = possibles[0]
+                            if update_grid is not None:
+                                update_grid(idx, possibles[0])
                             one_to_solve = True
         return s_answer, iterations
 
-    def solve_naked_single_one_step(self):
-        """
-        Solves one square in Sudoku using naked single rule.
-
-        :return: Index of updated square or None if invalid or complete
-        """
-        if self.is_valid() and not self.is_complete():
-            for idx in range(len(self.grid)):
-                if self.grid[idx] == 0:
-                    possibles = self.candidates[idx]
-                    if len(possibles) == 1:
-                        self.grid[idx] = possibles[0]
-                        return idx
-        else:
-            return None
-
-    def solve_backtracking_not_optimized(self):
+    def solve_backtracking_not_optimized(self, update_grid):
         print('Starting backtrack: ')
         solution = copy.deepcopy(self)
 
@@ -242,18 +241,25 @@ class Sudoku:
                 for possible in solution.possibles(position):
                     # print(f'trying {possible} in position {position}')
                     solution.grid[position] = possible
+                    if update_grid is not None:
+                        update_grid(position, possible)
                     if not solution.is_valid():
                         # print(f'{solution}')
                         solution.grid[position] = 0
+                        if update_grid is not None:
+                            update_grid(position, 0)
                         continue
                     elif extend_solution(position+1) is not None:
                         # print()
                         return solution
             solution.grid[position] = 0
+            if update_grid is not None:
+                update_grid(position, 0)
             # print('Backtrack')
             return None
 
         return extend_solution(0)
+
 
 def sudoku_solve():
     """
@@ -269,10 +275,13 @@ def sudoku_solve():
     parser.add_argument('infile', metavar='str', help='file containing sudoku')
     parser.add_argument('-i', '--interactive', action='store_true', help='interactive mode indicator')
     parser.add_argument('-b', '--backtrack', action='store_true', help='solve via backtracking')
+    parser.add_argument('-d', '--delay', nargs='?', default=0, const=10, type=int,
+                        help='milliseconds to delay when stepping through solution')
     args = parser.parse_args()
 
     # print(f'Input file = {args.infile}')
     # print(f'Interactive = {args.interactive}')
+    print(f'Delay = {args.delay}')
     s = Sudoku.sudoku_from_file(args.infile)
     if not args.interactive:
         print(f'Puzzle from {args.infile}\n')
@@ -280,12 +289,13 @@ def sudoku_solve():
     else:
         d = Display()
         s_prime = copy.deepcopy(s)
-        d.setup_display(args.infile, s_prime)
+        d.setup_display(args.infile, s_prime, args.delay)
+        d.solve_by_method(args.backtrack)
         d.event_loop()
 
     if args.backtrack:
         with Timer("Backtracking Not Optimized", text="Backtrack: {:0.4f} seconds"):
-            solution = s.solve_backtracking_not_optimized()
+            solution = s.solve_backtracking_not_optimized(None)
         if solution is not None:
             print(f'Solution via backtracking\n{solution}')
         else:
@@ -295,7 +305,7 @@ def sudoku_solve():
     print(f'Valid = {s.is_valid()}')
 
     with Timer("Solving naked single only", text="Solving time (naked single only): {:0.4f} seconds"):
-        s_answer, iterations = s.solve_naked_singles()
+        s_answer, iterations = s.solve_naked_singles(None)
     print(f'Answer via naked singles method:\n{s_answer}')
     if s_answer.is_complete():
         print(f'Sudoku solved in {iterations} iterations')
