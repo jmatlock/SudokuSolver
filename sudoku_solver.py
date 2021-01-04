@@ -10,15 +10,18 @@ a solution with coaching and guidance.
 Usage:
     SudokuSolver puzzle.txt [-i]
         puzzle.txt - Input file for sudoku puzzle
-        -i Interactive mode (Not yet implemented)
+        -i Interactive mode
+        -b Use backtracking to solve
+        -d Delay (in millisecond) to use when animating steps
 
 In non-interactive mode, solved sudoku is written to
 the console.
 
 This project is still under development. Currently it can read in a
 puzzle file, indicate whether the puzzle is completed and/or valid
-(to the rules of sudoku), and it will provide hints to the best
-starting places to solve the puzzle.
+(to the rules of sudoku), and will solve either using the naked
+singles rule or backtracking. It also provides a GUI display and
+animates the solving of the puzzle.
 """
 import argparse
 from Timer import Timer
